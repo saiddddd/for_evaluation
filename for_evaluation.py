@@ -26,20 +26,26 @@ if uploaded_file:
         (df['location'] == location)
     ].copy()
 
+
     if 'yearweek' in df_filtered.columns:
-        df_filtered['time'] = pd.to_datetime(df_filtered['yearweek'].astype(str) + '-1', format='%G%V-%u', errors='coerce')
+        df_filtered['year'] = df_filtered['yearweek'].astype(str).str[:4].astype(int)
+        df_filtered['week'] = df_filtered['yearweek'].astype(str).str[4:].astype(int)
+        df_filtered['time'] = pd.to_datetime(df_filtered['year'].astype(str) + '-W' + df_filtered['week'].astype(str) + '-1', format='%Y-W%W-%w', errors='coerce')
 
 
-    df_significant = df_filtered[df_filtered['significant_result'].isin(["Increase", "Decrease"])].copy()
-
-    st.header(f"Significant Changes for {location} - {kpi_name}")
+    st.header(f"Visualization for {location} - {kpi_name}")
 
     plt.figure(figsize=(14, 6))
-    color_map = {'Increase': 'red', 'Decrease': 'green'}
+    sns.lineplot(data=df_filtered, x='time', y='kpi_value', label='Actual Value', color='blue')
+    sns.lineplot(data=df_filtered, x='time', y='valid_value', label='Valid Value', color='black')
 
-    for result, color in color_map.items():
-        subset = df_significant[df_significant['significant_result'] == result]
-        if not subset.empty:
+    if 'lb' in df_filtered.columns and 'ub' in df_filtered.columns:
+        plt.fill_between(df_filtered['time'], df_filtered['lb'], df_filtered['ub'], color='blue', alpha=0.2, label='Confidence Interval')
+
+    if 'significant_result' in df_filtered.columns:
+        color_map = {'Increase': 'red', 'Decrease': 'green'}
+        for result, color in color_map.items():
+            subset = df_filtered[df_filtered['significant_result'] == result]
             plt.scatter(subset['time'], subset['kpi_value'], color=color, s=50, label=f'Alert {result}')
 
     plt.xticks(rotation=45)
@@ -48,7 +54,7 @@ if uploaded_file:
 
     plt.xlabel("Time")
     plt.ylabel(kpi_name)
-    plt.title(f"Significant Changes in {kpi_name} for {location}")
+    plt.title(f"{kpi_name} Over Time for {location}")
     plt.legend()
     plt.grid(True)
 

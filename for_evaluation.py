@@ -51,7 +51,7 @@ if uploaded_file:
     st.header(f"Visualization for {location} - {kpi_name}")
 
     st.markdown(
-        "**Caution:** The Y-axis scale might be relatively small, making variations appear visually significant. However, statistical tests such as T-tests should be used to determine true significance."
+        "**Caution:** The Y-axis scale might be relatively small, making variations appear visually significant. However, statistical tests such as T-tests should be used to determine true statistical significance."
     )
 
     plt.figure(figsize=(14, 6))
@@ -65,7 +65,7 @@ if uploaded_file:
         color_map = {2: 'red', 1: 'green'}
         for result, color in color_map.items():
             subset = df_filtered[df_filtered['significant_result'] == result]
-            plt.scatter(subset['time'], subset['kpi_value'], color=color, s=50, label=f'Alert {result}')
+            plt.scatter(subset['time'], subset['kpi_value'], color=color, s=50, label=f'Alert {result} (statistical significance)')
 
     plt.xticks(rotation=45)
     plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())

@@ -28,7 +28,8 @@ if uploaded_file:
 
     df_filtered['granularity'] = df_filtered['granularity'].astype(str)
     if 'yearweek' in df_filtered.columns:
-        df_filtered['time'] = pd.to_datetime(df_filtered['yearweek'].astype(str) + '0', format='%Y%W%w')
+        df_filtered['time'] = pd.to_datetime(df_filtered['yearweek'].astype(str) + '1', format='%Y%W%w', errors='coerce')
+
     else:
         df_filtered['time'] = pd.to_datetime(df_filtered['date'], errors='coerce')
 

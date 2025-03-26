@@ -12,16 +12,30 @@ if uploaded_file:
     st.sidebar.success("File uploaded successfully!")
 
     st.sidebar.header("Select Filters")
-    kpi_name = st.sidebar.selectbox("Select KPI Name", df['kpi_name'].unique())
-    kpi_category = st.sidebar.selectbox("Select KPI Category", df['kpi_category'].unique())
-    level = st.sidebar.selectbox("Select Level", df['level'].unique())
 
-    available_locations = df[df['level'] == level]['location'].unique()
+
+    kpi_category = st.sidebar.selectbox("Select KPI Category", df['kpi_category'].unique())
+
+
+    available_kpi_names = df[df['kpi_category'] == kpi_category]['kpi_name'].unique()
+    kpi_name = st.sidebar.selectbox("Select KPI Name", available_kpi_names)
+
+
+    available_levels = df[(df['kpi_category'] == kpi_category) & (df['kpi_name'] == kpi_name)]['level'].unique()
+    level = st.sidebar.selectbox("Select Level", available_levels)
+
+
+    available_locations = df[
+        (df['kpi_category'] == kpi_category) & 
+        (df['kpi_name'] == kpi_name) & 
+        (df['level'] == level)
+    ]['location'].unique()
     location = st.sidebar.selectbox("Select Location", available_locations)
 
+
     df_filtered = df[
-        (df['kpi_name'] == kpi_name) &
         (df['kpi_category'] == kpi_category) &
+        (df['kpi_name'] == kpi_name) &
         (df['level'] == level) &
         (df['location'] == location)
     ].copy()

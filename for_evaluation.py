@@ -50,6 +50,10 @@ if uploaded_file:
 
     st.header(f"Visualization for {location} - {kpi_name}")
 
+    st.markdown(
+        "**Caution:** The Y-axis scale might be relatively small, making variations appear visually significant. However, statistical tests such as T-tests should be used to determine true significance."
+    )
+
     plt.figure(figsize=(14, 6))
     sns.lineplot(data=df_filtered, x='time', y='kpi_value', label='Actual Value', color='blue')
     sns.lineplot(data=df_filtered, x='time', y='valid_value', label='Valid Value', color='black')

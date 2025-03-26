@@ -28,10 +28,20 @@ if uploaded_file:
 
 
     if 'yearweek' in df_filtered.columns:
-        df_filtered['year'] = df_filtered['yearweek'].astype(str).str[:4].astype(int)
-        df_filtered['week'] = df_filtered['yearweek'].astype(str).str[4:].astype(int)
+        df_filtered = df_filtered[df_filtered['yearweek'].notna()]  
+
+        df_filtered['yearweek'] = df_filtered['yearweek'].astype(int).astype(str) 
+        df_filtered['year'] = df_filtered['yearweek'].str[:4].astype(int)
+        df_filtered['week'] = df_filtered['yearweek'].str[4:].astype(int)
+
+
+        df_filtered = df_filtered[df_filtered['week'] > 0]
+
+
         df_filtered['time'] = pd.to_datetime(df_filtered['year'].astype(str) + '-W' + df_filtered['week'].astype(str) + '-1', format='%Y-W%W-%w', errors='coerce')
 
+
+        df_filtered = df_filtered[df_filtered['time'].notna()]
 
     st.header(f"Visualization for {location} - {kpi_name}")
 

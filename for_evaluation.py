@@ -13,17 +13,13 @@ if uploaded_file:
 
     st.sidebar.header("Select Filters")
 
-
     kpi_category = st.sidebar.selectbox("Select KPI Category", df['kpi_category'].unique())
-
 
     available_kpi_names = df[df['kpi_category'] == kpi_category]['kpi_name'].unique()
     kpi_name = st.sidebar.selectbox("Select KPI Name", available_kpi_names)
 
-
     available_levels = df[(df['kpi_category'] == kpi_category) & (df['kpi_name'] == kpi_name)]['level'].unique()
     level = st.sidebar.selectbox("Select Level", available_levels)
-
 
     available_locations = df[
         (df['kpi_category'] == kpi_category) & 
@@ -31,7 +27,6 @@ if uploaded_file:
         (df['level'] == level)
     ]['location'].unique()
     location = st.sidebar.selectbox("Select Location", available_locations)
-
 
     df_filtered = df[
         (df['kpi_category'] == kpi_category) &
@@ -79,3 +74,6 @@ if uploaded_file:
     plt.grid(True)
 
     st.pyplot(plt)
+
+    st.subheader("Descriptive Statistics")
+    st.write(df_filtered[['kpi_value', 'valid_value', 'lb', 'ub']].describe())

@@ -24,14 +24,19 @@ if uploaded_file:
         (df['kpi_category'] == kpi_category) &
         (df['level'] == level) &
         (df['location'] == location)
-    ]
+    ].copy()
 
     df_filtered['granularity'] = df_filtered['granularity'].astype(str)
-    if 'yearweek' in df_filtered.columns:
-        df_filtered['time'] = pd.to_datetime(df_filtered['yearweek'].astype(str) + '1', format='%Y%W%w', errors='coerce')
 
+
+    if 'yearweek' in df_filtered.columns:
+        df_filtered['time'] = pd.to_datetime(df_filtered['yearweek'].astype(str) + '-1', format='%G%V-%u', errors='coerce')
     else:
         df_filtered['time'] = pd.to_datetime(df_filtered['date'], errors='coerce')
+
+
+    df_filtered = df_filtered.dropna(subset=['time'])
+
 
     st.header(f"Visualization for {location} - {kpi_name}")
     plt.figure(figsize=(14, 6))

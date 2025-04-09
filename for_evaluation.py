@@ -80,10 +80,10 @@ if uploaded_file:
     if 'lb' in df_filtered.columns and 'ub' in df_filtered.columns:
         plt.fill_between(df_filtered['time'], df_filtered['lb'], df_filtered['ub'], color='blue', alpha=0.2, label='Confidence Interval')
 
-    if 'status_alert' in df_filtered.columns:
+    if 'alert_status' in df_filtered.columns:
         color_map = {'degrade': 'red', 'improve': 'green'}
         for result, color in color_map.items():
-            subset = df_filtered[df_filtered['status_alert'] == result]
+            subset = df_filtered[df_filtered['alert_status'] == result]
             plt.scatter(subset['time'], subset['kpi_value'], color=color, s=50, label=f'Alert {result} (statistical significance)')
 
     plt.xticks(rotation=45)

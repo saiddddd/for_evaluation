@@ -10,31 +10,38 @@ uploaded_file = st.sidebar.file_uploader("Upload CSV file", type=["csv"])
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
     df = df[['date', 'level', 'location', 'raw_value', 'initial_projection', 'latest_projection']]
-    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    
+    df['date'] = pd.to_datetime(df['date'], format='%m/%d/%Y', errors='coerce')
     df = df[df['date'].notna()]
     df = df.sort_values(by='date')
-    st.sidebar.success("File uploaded successfully!")
 
+    st.sidebar.success("File uploaded successfully!")
     st.sidebar.header("Select Filters")
 
     level = st.sidebar.selectbox("Select Level", df['level'].dropna().unique())
     available_locations = df[df['level'] == level]['location'].dropna().unique()
     location = st.sidebar.selectbox("Select Location", available_locations)
 
-    df_filtered = df[
-        (df['level'] == level) &
-        (df['location'] == location)
-    ].copy()
-
+    df_filtered = df[(df['level'] == level) & (df['location'] == location)].copy()
     df_filtered = df_filtered.sort_values(by='date')
 
-    min_date = df_filtered['date'].min()
-    max_date = df_filtered['date'].max()
-    date_range = st.sidebar.date_input("Select Date Range", value=(min_date, max_date), min_value=min_date, max_value=max_date)
+    if not df_filtered.empty:
+        min_date = df_filtered['date'].min().date()
+        max_date = df_filtered['date'].max().date()
 
-    if isinstance(date_range, tuple) and len(date_range) == 2:
-        start_date, end_date = date_range
-        df_filtered = df_filtered[(df_filtered['date'] >= pd.to_datetime(start_date)) & (df_filtered['date'] <= pd.to_datetime(end_date))]
+        date_range = st.sidebar.date_input(
+            "Select Date Range",
+            value=(min_date, max_date),
+            min_value=min_date,
+            max_value=max_date
+        )
+
+        if isinstance(date_range, tuple) and len(date_range) == 2:
+            start_date, end_date = date_range
+            df_filtered = df_filtered[
+                (df_filtered['date'] >= pd.to_datetime(start_date)) & 
+                (df_filtered['date'] <= pd.to_datetime(end_date))
+            ]
 
     st.header(f"Adaptive Projection for {location}")
 
@@ -43,8 +50,9 @@ if uploaded_file:
     sns.lineplot(data=df_filtered, x='date', y='initial_projection', label='Initial Projection', color='orange', ax=ax)
     sns.lineplot(data=df_filtered, x='date', y='latest_projection', label='Latest Projection', color='green', ax=ax)
 
-    ax.set_xticks(df_filtered['date'])
-    ax.set_xticklabels(df_filtered['date'].dt.strftime('%Y-%m-%d'), rotation=45, ha='right')
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
     ax.set_xlim(df_filtered['date'].min(), df_filtered['date'].max())
 
     ax.set_xlabel("Date")

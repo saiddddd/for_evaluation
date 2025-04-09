@@ -50,9 +50,27 @@ if uploaded_file:
 
     st.header(f"Visualization for {location} - {kpi_name}")
 
+    
     st.warning(
-        "⚠ **Caution:** The Y-axis scale might be relatively small, making variations appear visually significant. However, statistical tests such as T-tests should be used to determine true statistical significance."
+        "⚠ **Caution:** The Y-axis scale might be relatively small, making variations appear visually significant. "
+        "However, statistical tests such as T-tests should be used to determine true statistical significance.\n\n"
+        "**Legend:**\n"
+        "- <span style='color:green;'>🟩 Alert 1</span>: Indicates a **decrease**\n"
+        "- <span style='color:red;'>🟥 Alert 2</span>: Indicates an **increase**",
+        icon="⚠️"
     )
+
+    st.markdown(
+        """
+        <style>
+        .stMarkdown p {
+            line-height: 1.5;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 
     plt.figure(figsize=(14, 6))

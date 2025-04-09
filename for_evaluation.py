@@ -52,10 +52,9 @@ if uploaded_file:
         "However, statistical tests such as T-tests should be used to determine true statistical significance.\n\n"
         "**Legend:**\n"
         "- 🟩 (Alert) Indicates a **Improve**\n"
-        "- 🟥 (Alert) Indicates an **Degrade**",
+        "- 🟥 (Alert) Indicates a **Degrade**",
         icon="⚠️"
     )
-
 
     fig = go.Figure()
 
@@ -107,13 +106,21 @@ if uploaded_file:
     stats_available = [col for col in stats_cols if col in df_filtered.columns]
     st.write(df_filtered[stats_available].describe())
 
+    if 'time' in df_filtered.columns:
+        df_filtered['date_col'] = df_filtered['time']
+    elif 'date' in df_filtered.columns:
+        df_filtered['date_col'] = pd.to_datetime(df_filtered['date'], errors='coerce')
+    else:
+        df_filtered['date_col'] = pd.NaT
+
+    df_filtered = df_filtered.sort_values(by='date_col')
+
     st.subheader("Filtered Data Preview")
     extra_cols = ['alert_description_percentage', 'count_alert', 'alert_status']
-    table_cols = stats_available + [col for col in extra_cols if col in df_filtered.columns]
+    table_cols = ['date_col'] + stats_available + [col for col in extra_cols if col in df_filtered.columns]
     st.write(df_filtered[table_cols])
-
 
     st.subheader("Summary Table")
     summary_cols = ['level', 'location', 'kpi_category', 'kpi_name', 'alert_description_percentage']
-    summary_data = df_filtered[summary_cols].drop_duplicates()
+    summary_data = df_filtered[['date_col'] + summary_cols].drop_duplicates()
     st.dataframe(summary_data, use_container_width=True)

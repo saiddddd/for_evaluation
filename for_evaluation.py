@@ -10,6 +10,13 @@ if uploaded_file:
     df = pd.read_csv(uploaded_file)
     st.sidebar.success("File uploaded successfully!")
 
+    if 'yearweek' in df.columns:
+        df['date_col'] = df['yearweek'].astype(str)
+    elif 'date' in df.columns:
+        df['date_col'] = pd.to_datetime(df['date'], errors='coerce')
+    else:
+        df['date_col'] = pd.NaT
+
     st.sidebar.header("Select Filters")
 
     kpi_category = st.sidebar.selectbox("Select KPI Category", df['kpi_category'].dropna().unique())
@@ -36,15 +43,6 @@ if uploaded_file:
         (df['location'] == location)
     ].copy()
 
-    if 'yearweek' in df_filtered.columns:
-        df_filtered = df_filtered[df_filtered['yearweek'].notna()]
-        df_filtered['yearweek'] = df_filtered['yearweek'].astype(str).str.zfill(6)
-        df_filtered['year'] = df_filtered['yearweek'].str[:4].astype(int)
-        df_filtered['week'] = df_filtered['yearweek'].str[4:].astype(int)
-        df_filtered = df_filtered[(df_filtered['week'] > 0) & (df_filtered['week'] <= 53)]
-        df_filtered['time'] = pd.to_datetime(df_filtered['year'].astype(str) + '-W' + df_filtered['week'].astype(str) + '-1', format='%Y-W%W-%w', errors='coerce')
-        df_filtered = df_filtered[df_filtered['time'].notna() & (df_filtered['time'].dt.year >= 2000)]
-
     st.header(f"Visualization for {location} - {kpi_name}")
 
     st.warning(
@@ -58,15 +56,15 @@ if uploaded_file:
 
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=df_filtered['time'], y=df_filtered['kpi_value'],
+    fig.add_trace(go.Scatter(x=df_filtered['date_col'], y=df_filtered['kpi_value'],
                              mode='lines+markers', name='Actual Value', line=dict(color='blue')))
     
-    fig.add_trace(go.Scatter(x=df_filtered['time'], y=df_filtered['valid_value'],
+    fig.add_trace(go.Scatter(x=df_filtered['date_col'], y=df_filtered['valid_value'],
                              mode='lines+markers', name='Valid Value', line=dict(color='black')))
     
     if 'lb' in df_filtered.columns and 'ub' in df_filtered.columns:
         fig.add_trace(go.Scatter(
-            x=pd.concat([df_filtered['time'], df_filtered['time'][::-1]]),
+            x=pd.concat([df_filtered['date_col'], df_filtered['date_col'][::-1]]),
             y=pd.concat([df_filtered['ub'], df_filtered['lb'][::-1]]),
             fill='toself',
             fillcolor='rgba(0, 0, 255, 0.2)',
@@ -83,7 +81,7 @@ if uploaded_file:
             subset = df_filtered[df_filtered['alert_status'] == result]
             if not subset.empty:
                 fig.add_trace(go.Scatter(
-                    x=subset['time'], y=subset['kpi_value'],
+                    x=subset['date_col'], y=subset['kpi_value'],
                     mode='markers',
                     marker=dict(color=color, size=10),
                     name=f'Alert {result.capitalize()}'
@@ -105,13 +103,6 @@ if uploaded_file:
     stats_cols = ['kpi_value', 'valid_value', 'lb', 'ub']
     stats_available = [col for col in stats_cols if col in df_filtered.columns]
     st.write(df_filtered[stats_available].describe())
-
-    if 'time' in df_filtered.columns:
-        df_filtered['date_col'] = df_filtered['time']
-    elif 'date' in df_filtered.columns:
-        df_filtered['date_col'] = pd.to_datetime(df_filtered['date'], errors='coerce')
-    else:
-        df_filtered['date_col'] = pd.NaT
 
     df_filtered = df_filtered.sort_values(by='date_col')
 

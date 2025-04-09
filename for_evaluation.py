@@ -112,6 +112,6 @@ if uploaded_file:
     st.write(df_filtered[table_cols])
 
     st.subheader("Summary Table")
-    summary_cols = ['level', 'location', 'kpi_category', 'kpi_name', 'alert_description_percentage']
+    summary_cols = ['level', 'location', 'kpi_category', 'kpi_name', 'alert_description_percentage', 'significant_result', 'alert_status', 'count_alert']
     summary_data = df_filtered[['date_col'] + summary_cols].drop_duplicates()
     st.dataframe(summary_data, use_container_width=True)

@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib.dates as mdates
+import plotly.graph_objects as go
+import plotly.express as px
 
 st.sidebar.header("Upload Your Data")
 uploaded_file = st.sidebar.file_uploader("Upload CSV file", type=["csv"])
@@ -57,23 +56,26 @@ if uploaded_file:
         icon="⚠️"
     )
 
-    st.markdown(
-        """
-        <style>
-        .stMarkdown p {
-            line-height: 1.5;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
 
-    fig, ax = plt.subplots(figsize=(14, 6))
-    sns.lineplot(data=df_filtered, x='time', y='kpi_value', label='Actual Value', color='blue', ax=ax)
-    sns.lineplot(data=df_filtered, x='time', y='valid_value', label='Valid Value', color='black', ax=ax)
+    fig = go.Figure()
 
+    fig.add_trace(go.Scatter(x=df_filtered['time'], y=df_filtered['kpi_value'],
+                             mode='lines+markers', name='Actual Value', line=dict(color='blue')))
+    
+    fig.add_trace(go.Scatter(x=df_filtered['time'], y=df_filtered['valid_value'],
+                             mode='lines+markers', name='Valid Value', line=dict(color='black')))
+    
     if 'lb' in df_filtered.columns and 'ub' in df_filtered.columns:
-        ax.fill_between(df_filtered['time'], df_filtered['lb'], df_filtered['ub'], color='blue', alpha=0.2, label='Confidence Interval')
+        fig.add_trace(go.Scatter(
+            x=pd.concat([df_filtered['time'], df_filtered['time'][::-1]]),
+            y=pd.concat([df_filtered['ub'], df_filtered['lb'][::-1]]),
+            fill='toself',
+            fillcolor='rgba(0, 0, 255, 0.2)',
+            line=dict(color='rgba(255,255,255,0)'),
+            hoverinfo="skip",
+            name='Confidence Interval',
+            showlegend=True
+        ))
 
     if 'alert_status' in df_filtered.columns:
         df_filtered['alert_status'] = df_filtered['alert_status'].astype(str).str.lower()
@@ -81,19 +83,37 @@ if uploaded_file:
         for result, color in color_map.items():
             subset = df_filtered[df_filtered['alert_status'] == result]
             if not subset.empty:
-                ax.scatter(subset['time'], subset['kpi_value'], c=color, s=50, label=f'Alert {result} (statistical significance)')
+                fig.add_trace(go.Scatter(
+                    x=subset['time'], y=subset['kpi_value'],
+                    mode='markers',
+                    marker=dict(color=color, size=10),
+                    name=f'Alert {result.capitalize()}'
+                ))
 
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    fig.update_layout(
+        title=f"{kpi_name} Over Time for {location}",
+        xaxis_title="Time",
+        yaxis_title=kpi_name,
+        xaxis=dict(tickangle=45),
+        legend=dict(orientation="h", y=-0.2),
+        margin=dict(l=20, r=20, t=50, b=100),
+        height=600
+    )
 
-    ax.set_xlabel("Time")
-    ax.set_ylabel(kpi_name)
-    ax.set_title(f"{kpi_name} Over Time for {location}")
-    ax.legend()
-    ax.grid(True)
-
-    st.pyplot(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
     st.subheader("Descriptive Statistics")
-    st.write(df_filtered[['kpi_value', 'valid_value', 'lb', 'ub']].describe())
+    stats_cols = ['kpi_value', 'valid_value', 'lb', 'ub']
+    stats_available = [col for col in stats_cols if col in df_filtered.columns]
+    st.write(df_filtered[stats_available].describe())
+
+    st.subheader("Filtered Data Preview")
+    extra_cols = ['alert_description_percentage', 'count_alert', 'alert_status']
+    table_cols = stats_available + [col for col in extra_cols if col in df_filtered.columns]
+    st.write(df_filtered[table_cols])
+
+
+    st.subheader("Summary Table")
+    summary_cols = ['level', 'location', 'kpi_category', 'kpi_name', 'alert_description_percentage']
+    summary_data = df_filtered[summary_cols].drop_duplicates()
+    st.dataframe(summary_data, use_container_width=True)

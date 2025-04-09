@@ -52,8 +52,8 @@ if uploaded_file:
         "⚠ **Caution:** The Y-axis scale might be relatively small, making variations appear visually significant. "
         "However, statistical tests such as T-tests should be used to determine true statistical significance.\n\n"
         "**Legend:**\n"
-        "- 🟩 Indicates a **Improve**\n"
-        "- 🟥 Indicates an **Degrade**",
+        "- 🟩 (Alert) Indicates a **Improve**\n"
+        "- 🟥 (Alert) Indicates an **Degrade**",
         icon="⚠️"
     )
 

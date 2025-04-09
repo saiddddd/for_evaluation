@@ -28,6 +28,14 @@ if uploaded_file:
 
     df_filtered = df_filtered.sort_values(by='date')
 
+    min_date = df_filtered['date'].min()
+    max_date = df_filtered['date'].max()
+    date_range = st.sidebar.date_input("Select Date Range", value=(min_date, max_date), min_value=min_date, max_value=max_date)
+
+    if isinstance(date_range, tuple) and len(date_range) == 2:
+        start_date, end_date = date_range
+        df_filtered = df_filtered[(df_filtered['date'] >= pd.to_datetime(start_date)) & (df_filtered['date'] <= pd.to_datetime(end_date))]
+
     st.header(f"Adaptive Projection for {location}")
 
     fig, ax = plt.subplots(figsize=(14, 6))

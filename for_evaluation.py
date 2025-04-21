@@ -115,3 +115,23 @@ if uploaded_file:
     summary_cols = ['level', 'location', 'kpi_category', 'kpi_name', 'alert_description_percentage', 'significant_result', 'alert_status', 'count_alert']
     summary_data = df_filtered[['date_col'] + summary_cols].drop_duplicates()
     st.dataframe(summary_data, use_container_width=True)
+
+    # --- Excel Export Section ---
+    st.subheader("Download as Excel")
+
+    @st.cache_data
+    def convert_df_to_excel(data):
+        import io
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            data.to_excel(writer, sheet_name='FilteredData', index=False)
+        return output.getvalue()
+
+    excel_file = convert_df_to_excel(df_filtered)
+
+    st.download_button(
+        label="Download Filtered Data as Excel",
+        data=excel_file,
+        file_name=f"{location}_{kpi_name}_filtered.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
